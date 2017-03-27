@@ -95,7 +95,7 @@ func Parse(src []byte) (*Toml, error) {
 			if equalPos == -1 {
 				continue
 			}
-			var node G
+			var node interface{}
 			name := bytes.TrimSpace(v[:equalPos])
 			value := bytes.TrimLeftFunc(v[equalPos+1:], unicode.IsSpace)
 			if bytes.HasPrefix(value, []byte(`"""`)) {
@@ -114,6 +114,7 @@ func Parse(src []byte) (*Toml, error) {
 							break
 						} else {
 							bf.Write(text)
+							bf.WriteByte('\n')
 						}
 					}
 					stringValue = bf.String()
@@ -231,7 +232,7 @@ func Parse(src []byte) (*Toml, error) {
 	return toml, nil
 }
 
-func ReadArray(first []byte, next func() ([]byte, bool)) ([]G, error) {
+func ReadArray(first []byte, next func() ([]byte, bool)) ([]interface{}, error) {
 	i := 0
 	return readArray(func() (byte, bool) {
 		for i == len(first) {
@@ -247,7 +248,7 @@ func ReadArray(first []byte, next func() ([]byte, bool)) ([]G, error) {
 		return b, true
 	})
 }
-func readArray(next func() (byte, bool)) (arr []G, err error) {
+func readArray(next func() (byte, bool)) (arr []interface{}, err error) {
 	b, has := next()
 	if !has {
 		return nil, errors.New("toml文件格式错误")
@@ -255,7 +256,7 @@ func readArray(next func() (byte, bool)) (arr []G, err error) {
 	if b != '[' {
 		return nil, errors.New("toml文件格式错误")
 	}
-	arr = []G{}
+	arr = []interface{}{}
 	for {
 		b, has := next()
 		if !has {
@@ -379,10 +380,9 @@ func (t *Toml) Get(path string) (interface{}) {
 	return nil
 }
 
-type G interface{}
 type Tree struct {
 	Name     string
-	Nodes    map[string]G
+	Nodes    map[string]interface{}
 	children map[string]*Tree
 	parent   *Tree
 }
@@ -391,7 +391,7 @@ func NewTree(name string, parent *Tree) (*Tree) {
 	return &Tree{
 		Name:     name,
 		children: map[string]*Tree{},
-		Nodes:    map[string]G{},
+		Nodes:    map[string]interface{}{},
 		parent:   parent,
 	}
 }
@@ -403,9 +403,9 @@ type Node struct {
 type KVNode struct {
 	Node
 	Value    string
-	MayValue G
+	MayValue interface{}
 }
 type ArrayNode struct {
 	Node
-	Value []G
+	Value []interface{}
 }
