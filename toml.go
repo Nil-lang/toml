@@ -152,7 +152,7 @@ func Parse(src []byte) (*Toml, error) {
 					Value:    stringValue,
 					MayValue: stringValue,
 				}
-			} else if bytes.Equal(value[:4], []byte("true")) || bytes.Equal(value[:4], []byte("false")) {
+			} else if bytes.Equal(value[:4], []byte("true")) || bytes.Equal(value[:5], []byte("false")) {
 				boolean := bytes.Equal(value[:4], []byte("true"))
 				node = KVNode{
 					Node: Node{
